@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import "./App.scss";
 import { LiveAPIProvider } from "./contexts/LiveAPIContext";
 import SidePanel from "./components/side-panel/SidePanel";
 import { Altair } from "./components/altair/Altair";
 import ControlTray from "./components/control-tray/ControlTray";
 import cn from "classnames";
+import { RightSidePanel } from "./components/PlanDisplay/RightSidePanel";
 
 const API_KEY = process.env.REACT_APP_GEMINI_API_KEY as string;
 if (typeof API_KEY !== "string") {
@@ -36,34 +37,41 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   // either the screen capture, the video or null, if null we hide it
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
 
   return (
     <div className="App">
       <LiveAPIProvider url={uri} apiKey={API_KEY}>
         <div className="streaming-console">
           <SidePanel />
-          <main>
-            <div className="main-app-area">
-              {/* APP goes here */}
-              <Altair />
-              <video
-                className={cn("stream", {
-                  hidden: !videoRef.current || !videoStream,
-                })}
-                ref={videoRef}
-                autoPlay
-                playsInline
-              />
+          <main className={cn("main-app-area", { "right-panel-open": isRightPanelOpen })}>
+            <div className="content-container">
+              <div className="video-wrapper">
+                {videoStream && (
+                  <video
+                    className="stream"
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                  />
+                )}
+                {!videoStream && <Altair />}
+              </div>
             </div>
-
-            <ControlTray
-              videoRef={videoRef}
-              supportsVideo={true}
-              onVideoStreamChange={setVideoStream}
-            >
-              {/* put your own buttons here */}
-            </ControlTray>
+            <div className="control-tray">
+              <ControlTray
+                videoRef={videoRef}
+                supportsVideo={true}
+                onVideoStreamChange={setVideoStream}
+              >
+                {/* put your own buttons here */}
+              </ControlTray>
+            </div>
           </main>
+          <RightSidePanel 
+            isOpen={isRightPanelOpen} 
+            toggleOpen={() => setIsRightPanelOpen(!isRightPanelOpen)} 
+          />
         </div>
       </LiveAPIProvider>
     </div>
